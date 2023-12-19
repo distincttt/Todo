@@ -56,12 +56,35 @@ class Task extends React.Component {
       onChangeEdited,
       id,
       showCompleted,
+      timerActive,
+      timerStop,
     } = this.props
+
+    let { min, sec } = this.props
 
     let classes = 'task'
 
     if (edited) classes += ' editing'
     if (completed) classes += ' completed'
+
+    let timeDom
+    if (min | sec) {
+      if (0 <= min && min < 10) min = `0${min}`
+      if (0 <= sec && sec < 10) sec = `0${sec}`
+      timeDom = (
+        <div className="timer">
+          <button className="timer-button" onClick={timerActive}>
+            Start
+          </button>
+          <button className="timer-button" onClick={timerStop}>
+            Stop
+          </button>
+          <span className="timer-span">
+            {min}:{sec}
+          </span>
+        </div>
+      )
+    } else timeDom = null
 
     return (
       <>
@@ -74,6 +97,7 @@ class Task extends React.Component {
                 {formatDistanceToNow(time, { includeSeconds: true }, { addSuffix: true })}
               </span>
             </label>
+            {timeDom}
             <div className="button-edit-delete">
               <button
                 className="icon icon-edit"

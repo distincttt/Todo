@@ -13,7 +13,7 @@ class App extends React.Component {
     todos: [],
   }
 
-  creatTodoItem(label) {
+  creatTodoItem(label, min, sec) {
     return {
       span: label,
       id: this.maxId++,
@@ -21,13 +21,16 @@ class App extends React.Component {
       completed: false,
       edited: false,
       showCompleted: true,
+      min: min,
+      sec: sec,
+      timer: null,
     }
   }
 
   deleteItem = (id) => {
+    this.timerStop(id)
     this.setState(({ todos }) => {
       const idx = todos.findIndex((el) => el.id === id)
-
       const newArray = [...todos.slice(0, idx), ...todos.slice(idx + 1)]
       return { todos: newArray }
     })
@@ -40,9 +43,11 @@ class App extends React.Component {
     })
   }
 
-  addItem = (text) => {
+  addItem = (text, min, sec) => {
+    if (!min) min = 0
+    if (!sec) sec = 0
     this.setState(({ todos }) => {
-      return { todos: [...todos, this.creatTodoItem(text)] }
+      return { todos: [...todos, this.creatTodoItem(text, min, sec)] }
     })
   }
 
@@ -127,6 +132,35 @@ class App extends React.Component {
     })
   }
 
+  timerActive = (id) => {
+    const timer = setInterval(() => {
+      this.setState(({ todos }) => {
+        const idx = todos.findIndex((el) => el.id === id)
+        const oldItem = todos[idx]
+        let newItem
+        oldItem.sec
+          ? (newItem = { ...oldItem, sec: oldItem.sec - 1, timer: timer })
+          : (newItem = { ...oldItem, sec: 59, min: oldItem.min - 1 })
+        // console.log(newItem.min, newItem.sec)
+        if (newItem.sec === 0 && newItem.min === 0) this.componentWillUnmount(timer)
+        // if (newItem.sec === 0 && newItem.min > 0) newItem = { ...oldItem, sec: 59, min: oldItem.min - 1 }
+        return {
+          todos: [...todos.slice(0, idx), newItem, ...todos.slice(idx + 1)],
+        }
+      })
+    }, 1000)
+  }
+
+  timerStop = (id) => {
+    const idx = this.state.todos.findIndex((el) => el.id === id)
+    const todoItem = this.state.todos[idx]
+    this.componentWillUnmount(todoItem.timer)
+  }
+
+  componentWillUnmount(timer) {
+    clearInterval(timer)
+  }
+
   render() {
     const todoCount = this.state.todos.filter((el) => !el.completed).length
     return (
@@ -142,6 +176,8 @@ class App extends React.Component {
             onToggleCompleted={this.onToggleCompleted}
             onToggleEdited={this.onToggleEdited}
             onChangeEdited={this.onChangeEdited}
+            timerActive={this.timerActive}
+            timerStop={this.timerStop}
           />
           <Footer
             todo={todoCount}
