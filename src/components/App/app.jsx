@@ -93,14 +93,6 @@ class App extends React.Component {
     })
   }
 
-  onSubmitEdited = (id) => {
-    this.setState(({ todos }) => {
-      return {
-        todos: this.toggleProperty(todos, id, 'edited'),
-      }
-    })
-  }
-
   allFilter = () => {
     this.setState(({ todos }) => {
       const newArray = todos.map((el) => {
