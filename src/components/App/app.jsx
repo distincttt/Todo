@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 import NewTaskForm from '../NewTaskForm/newtaskform'
 import TaskList from '../TaskList/tasklist'
@@ -6,17 +6,17 @@ import Footer from '../Footer/footer'
 
 import './app.css'
 
-class App extends React.Component {
-  maxId = 1
+export default function App() {
+  let maxId = 1
 
-  state = {
-    todos: [],
-  }
+  const [todos, setTodos] = useState([])
+  const [timerRun, setTimerRun] = useState(false)
+  const [timerId, setTimerId] = useState(0)
 
-  creatTodoItem(label, min, sec) {
+  function creatTodoItem(label, min, sec) {
     return {
       span: label,
-      id: this.maxId++,
+      id: maxId++,
       time: Date.now(),
       completed: false,
       edited: false,
@@ -27,31 +27,30 @@ class App extends React.Component {
     }
   }
 
-  deleteItem = (id) => {
-    this.timerStop(id)
-    this.setState(({ todos }) => {
-      const idx = todos.findIndex((el) => el.id === id)
-      const newArray = [...todos.slice(0, idx), ...todos.slice(idx + 1)]
-      return { todos: newArray }
-    })
+  const deleteItem = (id) => {
+    timerStop(id)
+    const idx = todos.findIndex((el) => el.id === id)
+    const newArray = [...todos.slice(0, idx), ...todos.slice(idx + 1)]
+    setTodos(newArray)
   }
 
-  deletedItems = () => {
-    this.setState(({ todos }) => {
-      const newArray = [...todos.filter((el) => !el.completed)]
-      return { todos: newArray }
-    })
+  const deletedItems = () => {
+    const newArray = [
+      ...todos.filter((el) => {
+        timerStop(el.id)
+        return !el.completed
+      }),
+    ]
+    setTodos(newArray)
   }
 
-  addItem = (text, min, sec) => {
+  const addItem = (text, min, sec) => {
     if (!min) min = 0
     if (!sec) sec = 0
-    this.setState(({ todos }) => {
-      return { todos: [...todos, this.creatTodoItem(text, min, sec)] }
-    })
+    setTodos([...todos, creatTodoItem(text, min, sec)])
   }
 
-  toggleProperty(arr, id, propName) {
+  function toggleProperty(arr, id, propName) {
     const idx = arr.findIndex((el) => el.id === id)
 
     const oldItem = arr[idx]
@@ -60,136 +59,103 @@ class App extends React.Component {
     return [...arr.slice(0, idx), newItem, ...arr.slice(idx + 1)]
   }
 
-  onToggleCompleted = (id) => {
-    this.setState(({ todos }) => {
-      return {
-        todos: this.toggleProperty(todos, id, 'completed'),
-      }
-    })
+  const onToggleCompleted = (id) => {
+    setTodos(toggleProperty(todos, id, 'completed'))
   }
 
-  onToggleEdited = (id, span) => {
+  const onToggleEdited = (id, span) => {
     if (!span) return
-    this.setState(({ todos }) => {
-      return {
-        todos: this.toggleProperty(todos, id, 'edited'),
-      }
-    })
+    setTodos(toggleProperty(todos, id, 'edited'))
   }
 
-  onChangeEdited = (e, id) => {
-    this.setState(({ todos }) => {
-      const idx = todos.findIndex((el) => el.id === id)
-      const oldItem = todos[idx]
-      const newItem = { ...oldItem, span: e.target.value.slice(0, 8).trim() }
-      return {
-        todos: [...todos.slice(0, idx), newItem, ...todos.slice(idx + 1)],
-      }
-    })
+  const onChangeEdited = (e, id) => {
+    const idx = todos.findIndex((el) => el.id === id)
+    const oldItem = todos[idx]
+    const newItem = { ...oldItem, span: e.target.value.slice(0, 8).trim() }
+    setTodos([...todos.slice(0, idx), newItem, ...todos.slice(idx + 1)])
   }
 
-  onSubmitEdited = (id) => {
-    this.setState(({ todos }) => {
-      return {
-        todos: this.toggleProperty(todos, id, 'edited'),
-      }
-    })
+  const onSubmitEdited = (id) => {
+    setTodos(toggleProperty(todos, id, 'edited'))
   }
 
-  allFilter = () => {
-    this.setState(({ todos }) => {
-      const newArray = todos.map((el) => {
-        el.showCompleted = true
-        return el
-      })
-      return {
-        todos: newArray,
-      }
+  const allFilter = () => {
+    const newArray = todos.map((el) => {
+      el.showCompleted = true
+      return el
     })
+    setTodos(newArray)
   }
 
-  activeFilter = () => {
-    this.setState(({ todos }) => {
-      const newArray = todos.map((el) => {
-        el.showCompleted = !el.completed
-        return el
-      })
-      return {
-        todos: newArray,
-      }
+  const activeFilter = () => {
+    const newArray = todos.map((el) => {
+      el.showCompleted = !el.completed
+      return el
     })
+    setTodos(newArray)
   }
 
-  completedFilter = () => {
-    this.setState(({ todos }) => {
-      const newArray = todos.map((el) => {
-        el.showCompleted = el.completed
-        return el
-      })
-      return {
-        todos: newArray,
-      }
+  const completedFilter = () => {
+    const newArray = todos.map((el) => {
+      el.showCompleted = el.completed
+      return el
     })
+    setTodos(newArray)
   }
 
-  timerActive = (id) => {
-    const timer = setInterval(() => {
-      this.setState(({ todos }) => {
-        const idx = todos.findIndex((el) => el.id === id)
+  const timerActive = (id) => {
+    setTimerRun(true)
+    setTimerId(id)
+  }
+
+  const timerStop = (id) => {
+    setTimerRun(false)
+    const idx = todos.findIndex((el) => el.id === id)
+    const todoItem = todos[idx]
+    clearTimeout(todoItem.timer)
+  }
+  useEffect(() => {
+    if (timerRun) {
+      console.log(timerRun)
+      const timer = setInterval(() => {
+        const idx = todos.findIndex((el) => el.id === timerId)
         const oldItem = todos[idx]
         let newItem
         oldItem.sec
           ? (newItem = { ...oldItem, sec: oldItem.sec - 1, timer: timer })
           : (newItem = { ...oldItem, sec: 59, min: oldItem.min - 1 })
-        // console.log(newItem.min, newItem.sec)
-        if (newItem.sec === 0 && newItem.min === 0) this.componentWillUnmount(timer)
-        // if (newItem.sec === 0 && newItem.min > 0) newItem = { ...oldItem, sec: 59, min: oldItem.min - 1 }
-        return {
-          todos: [...todos.slice(0, idx), newItem, ...todos.slice(idx + 1)],
-        }
-      })
-    }, 1000)
-  }
 
-  timerStop = (id) => {
-    const idx = this.state.todos.findIndex((el) => el.id === id)
-    const todoItem = this.state.todos[idx]
-    this.componentWillUnmount(todoItem.timer)
-  }
-
-  componentWillUnmount(timer) {
-    clearInterval(timer)
-  }
-
-  render() {
-    const todoCount = this.state.todos.filter((el) => !el.completed).length
-    return (
-      <section className="todoapp">
-        <header className="header">
-          <h1>todos</h1>
-          <NewTaskForm onItemAdded={this.addItem} />
-        </header>
-        <section className="main">
-          <TaskList
-            todos={this.state.todos}
-            onDeleted={this.deleteItem}
-            onToggleCompleted={this.onToggleCompleted}
-            onToggleEdited={this.onToggleEdited}
-            onChangeEdited={this.onChangeEdited}
-            timerActive={this.timerActive}
-            timerStop={this.timerStop}
-          />
-          <Footer
-            todo={todoCount}
-            deletedItems={this.deletedItems}
-            allFilter={this.allFilter}
-            activeFilter={this.activeFilter}
-            completedFilter={this.completedFilter}
-          />
-        </section>
+        if (newItem.sec === 0 && newItem.min === 0) timerStop(timerId)
+        setTodos([...todos.slice(0, idx), newItem, ...todos.slice(idx + 1)])
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  })
+  const todoCount = todos.filter((el) => !el.completed).length
+  return (
+    <section className="todoapp">
+      <header className="header">
+        <h1>todos</h1>
+        <NewTaskForm onItemAdded={addItem} />
+      </header>
+      <section className="main">
+        <TaskList
+          todos={todos}
+          onDeleted={deleteItem}
+          onToggleCompleted={onToggleCompleted}
+          onToggleEdited={onToggleEdited}
+          onChangeEdited={onChangeEdited}
+          timerActive={timerActive}
+          timerStop={timerStop}
+        />
+        <Footer
+          todo={todoCount}
+          deletedItems={deletedItems}
+          allFilter={allFilter}
+          activeFilter={activeFilter}
+          completedFilter={completedFilter}
+        />
       </section>
-    )
-  }
+    </section>
+  )
 }
-
-export default App

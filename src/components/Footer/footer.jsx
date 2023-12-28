@@ -5,35 +5,29 @@ import TaskFilter from '../TasksFilter/tasksfilter'
 
 import './footer.css'
 
-class Footer extends React.Component {
-  static defaultProps = {
-    todo: 0,
-    deletedItems: () => {},
-    allFilter: () => {},
-    activeFilter: () => {},
-    onChcompletedFilterangeEdited: () => {},
-  }
-
-  static propTypes = {
-    todo: PropTypes.number,
-    deletedItems: PropTypes.func,
-    allFilter: PropTypes.func,
-    activeFilter: PropTypes.func,
-    onChcompletedFilterangeEdited: PropTypes.func,
-  }
-
-  render() {
-    const { todo, deletedItems, allFilter, activeFilter, completedFilter } = this.props
-    return (
-      <footer className="footer">
-        <span className="todo-count">{todo} items left</span>
-        <TaskFilter allFilter={allFilter} activeFilter={activeFilter} completedFilter={completedFilter} />
-        <button className="clear-completed" onClick={deletedItems}>
-          Clear completed
-        </button>
-      </footer>
-    )
-  }
+export default function Footer({ todo, deletedItems, allFilter, activeFilter, completedFilter }) {
+  return (
+    <footer className="footer">
+      <span className="todo-count">{todo} items left</span>
+      <TaskFilter allFilter={allFilter} activeFilter={activeFilter} completedFilter={completedFilter} />
+      <button className="clear-completed" onClick={deletedItems}>
+        Clear completed
+      </button>
+    </footer>
+  )
 }
 
-export default Footer
+Footer.defaultProps = {
+  todo: 0,
+  filterActive: () => {},
+  filterAll: () => {},
+  filterCompleted: () => {},
+  clearCompleted: () => {},
+}
+Footer.propTypes = {
+  todo: PropTypes.number,
+  filterActive: PropTypes.func.isRequired,
+  filterAll: PropTypes.func.isRequired,
+  filterCompleted: PropTypes.func.isRequired,
+  clearCompleted: PropTypes.func.isRequired,
+}
