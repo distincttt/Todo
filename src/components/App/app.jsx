@@ -75,10 +75,6 @@ export default function App() {
     setTodos([...todos.slice(0, idx), newItem, ...todos.slice(idx + 1)])
   }
 
-  const onSubmitEdited = (id) => {
-    setTodos(toggleProperty(todos, id, 'edited'))
-  }
-
   const allFilter = () => {
     const newArray = todos.map((el) => {
       el.showCompleted = true
