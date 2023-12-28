@@ -38,7 +38,12 @@ class App extends React.Component {
 
   deletedItems = () => {
     this.setState(({ todos }) => {
-      const newArray = [...todos.filter((el) => !el.completed)]
+      const newArray = [
+        ...todos.filter((el) => {
+          this.timerStop(el.id)
+          return !el.completed
+        }),
+      ]
       return { todos: newArray }
     })
   }
